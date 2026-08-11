@@ -1,20 +1,17 @@
-import { next } from '@vercel/edge';
+import type { MiddlewareHandler } from 'astro';
 
-export const config = {
-  matcher: '/(.*)',
-};
-
-const PUBLIC_HOSTS = new Set(['junya03.com', 'www.junya03.com']);
-
-export default function middleware(request: Request) {
-  const hostname = new URL(request.url).hostname;
+export const onRequest: MiddlewareHandler = async (context, next) => {
+  const hostname = new URL(context.request.url).hostname;
 
   // 本番ドメインだけ認証なし
+  const PUBLIC_HOSTS = new Set(['junya03.com', 'www.junya03.com']);
+
   if (PUBLIC_HOSTS.has(hostname)) {
     return next();
   }
 
-  const authorizationHeader = request.headers.get('authorization') || '';
+  const authorizationHeader =
+    context.request.headers.get('authorization') || '';
 
   if (!authorizationHeader.startsWith('Basic ')) {
     return unauthorized();
@@ -33,8 +30,8 @@ export default function middleware(request: Request) {
     const password = decoded.slice(idx + 1);
 
     if (
-      user === process.env.BASIC_AUTH_USER &&
-      password === process.env.BASIC_AUTH_PASSWORD
+      user === import.meta.env.BASIC_AUTH_USER &&
+      password === import.meta.env.BASIC_AUTH_PASSWORD
     ) {
       return next();
     }
@@ -43,7 +40,7 @@ export default function middleware(request: Request) {
   }
 
   return unauthorized();
-}
+};
 
 function unauthorized() {
   return new Response('Basic Auth required', {
