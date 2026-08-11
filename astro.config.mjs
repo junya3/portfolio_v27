@@ -6,6 +6,7 @@ import vercel from '@astrojs/vercel';
 // https://astro.build/config
 export default defineConfig({
   site: import.meta.env.SITE_URL,
+  output: 'server',
 
   // -------------------
   // アナリティクス設定
